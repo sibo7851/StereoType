@@ -1,0 +1,338 @@
+<!doctype html>
+<html>
+
+  <head>
+    <title>Example of the Authorization Code flow with Spotify</title>
+    	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link href="style.css" rel="stylesheet">
+    <style type="text/css">
+      #login, #loggedin {
+        display: none;
+      }
+      .text-overflow {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 500px;
+      }
+    </style>
+  </head>
+	<style>
+		body 
+		{
+			background-image: url("http://www.gotechnologix.com/wp-content/uploads/2016/05/Solid-color-wallpapers-04-1920x1200.jpg");
+	    }
+	</style>
+  <body>
+	<div class="container">
+		<div class="row">
+			<div class="col-xl-7">
+				<br>
+				<br>
+				<div class="x" >
+					<p1> <font size="65"> Music for Everyone. </font></p1>
+				</div>
+				
+				<div class="y">
+					<p2> <font size="6">All your music. Anytime anywhere. For free.</font></p2>
+				</div>
+			</div>
+			<div class="col-xl-5"> 
+		 	 <div class="card">
+				  <div class="card-body">
+				  	<br>
+				  	<br>
+				  	<a href="https://www.colorado.edu/">
+				    <br>
+				    <p2> Sign in with <%= value1 %> </p2>
+				    <br>
+				    <br>
+					<form>
+					  <button type="button" class="btn btn-primary btn-lg btn-block"><a href="/login" class="btn btn-primary">Log in with Spotify</a></button>
+					  <br>
+					  <div class="jpt1"> <p1> New to this Platform? </p1> 
+					  <a class="btn btn-lg btn-primary jpt" href="https://www.spotify.com/us/signup/">Register Now </a> </div>
+					</form>
+					<br>
+				  </div>
+
+			</div>
+		</div>
+	</div>
+
+    <div class="container">
+      <div id="login">
+
+        <h1>This is an example of the Authorization Code flow</h1>
+        
+      </div>
+      <div id="loggedin">
+        <div id="user-profile">
+        </div>
+        <div id="oauth">
+        </div>
+                    <button type="button" class="spotify-button" id="get-top-tracks">Get Top Tracks
+                    <div id="top-tracks">nothing</div>
+<div class="spotify-button recommendations" id="getrecommendations" style="display: none">Get Recommendations</div>
+        <button class="btn btn-default" id="obtain-new-token">Obtain new token using the refresh token</button>
+        </div>
+      </div>
+    </div>
+
+
+    <script id="user-profile-template" type="text/x-handlebars-template">
+
+      <h1>Logged in as {{display_name}}</h1>
+
+      <div class="media">
+        <div class="pull-left">
+          <img class="media-object" width="150" src="{{images.0.url}}" />
+        </div>
+
+        <div class="media-body">
+          <dl class="dl-horizontal">
+            <dt>Display name</dt><dd class="clearfix">{{user_id}}</dd>
+            <dt>Id</dt><dd>{{id}}</dd>
+            <dt>Email</dt><dd>{{email}}</dd>
+            <dt>Spotify URI</dt><dd><a href="{{external_urls.spotify}}">{{external_urls.spotify}}</a></dd>
+            <dt>Link</dt><dd><a href="{{href}}">{{href}}</a></dd>
+            <dt>Profile Image</dt><dd class="clearfix"><a href="{{images.0.url}}">{{images.0.url}}</a></dd>
+            <dt>Country</dt><dd>{{country}}</dd>
+          </dl>
+        </div>
+      </div>
+    </script>
+
+    <script id="oauth-template" type="text/x-handlebars-template">
+      <h2>oAuth info</h2>
+      <dl class="dl-horizontal">
+        <dt>Access token</dt><dd class="text-overflow">{{access_token}}</dd>
+        <dt>Refresh token</dt><dd class="text-overflow">{{refresh_token}}</dd>
+      </dl>
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script>
+var holdMyBeer;
+function getCookie() {
+  
+  var ca = document.cookie.split('=');
+  //alert(ca[1]);
+  globalUserId=ca[2];
+  return ca[1];
+}
+      (function() {
+
+        /**
+         * Obtains parameters from the hash of the URL
+         * @return Object
+         */
+        function getHashParams() {
+          var hashParams = {};
+          var e, r = /([^&;=]+)=?([^&;]*)/g,
+              q = window.location.hash.substring(1);
+          while ( e = r.exec(q)) {
+             hashParams[e[1]] = decodeURIComponent(e[2]);
+          }
+          return hashParams;
+        }
+
+
+        var userProfileSource = document.getElementById('user-profile-template').innerHTML,
+            userProfileTemplate = Handlebars.compile(userProfileSource),
+            userProfilePlaceholder = document.getElementById('user-profile');
+
+        var oauthSource = document.getElementById('oauth-template').innerHTML,
+            oauthTemplate = Handlebars.compile(oauthSource),
+            oauthPlaceholder = document.getElementById('oauth');
+
+        var params = getHashParams();
+
+        var access_token = params.access_token,
+            refresh_token = params.refresh_token,
+            error = params.error;
+
+        if (error) {
+          alert('There was an error during the authentication');
+        } else {
+          if (access_token) {
+          	
+            // render oauth info
+            oauthPlaceholder.innerHTML = oauthTemplate({
+              access_token: access_token,
+              refresh_token: refresh_token
+            });
+
+            $.ajax({
+                url: 'https://api.spotify.com/v1/me',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token
+                },
+                success: function(response) {
+                  userProfilePlaceholder.innerHTML = userProfileTemplate(response);
+                  globalUserId=response.id;
+                  document.cookie = "username="+access_token+"="+globalUserId;
+                  loginFunction(access_token);
+                  getTopTracks(access_token);
+                  $('#login').hide();
+                  $('#loggedin').show();
+                }
+            });
+          } else {
+              // render initial screen
+              $('#login').show();
+              $('#loggedin').hide();
+          }
+
+
+      document.getElementById('obtain-new-token').addEventListener('click', function() {
+            $.ajax({
+              url: '/refresh_token',
+              data: {
+                'refresh_token': refresh_token
+              }
+            }).done(function(data) {
+              access_token = data.access_token;
+              getTopTracks(access_token)
+              oauthPlaceholder.innerHTML = oauthTemplate({
+                access_token: access_token,
+                refresh_token: refresh_token
+              });
+            });
+          }, false);
+
+                document.getElementById('get-top-tracks').addEventListener('click', function() {
+  getTopTracks(access_token);                                       
+});
+
+document.getElementById('getrecommendations').addEventListener('click', function() {  
+  getRecommendations(access_token)
+});
+
+var bool="true";
+var globalUserId="";
+
+        function getTopTracks(access_token) {
+  $.ajax({
+    url: 'https://api.spotify.com/v1/me/top/tracks?limit=100',
+    headers: {
+      'Authorization': 'Bearer ' + getCookie()
+    },
+    success: function(response) {
+    	tempArray=[];
+    	tempCSV="";
+    	//energyArray=[];
+    	
+    	for (var i=0;i<10;i++)
+    	{
+    		bool="true";
+    		tempArray.push(response.items[i].id)
+			tempCSV+=response.items[i].id+",";
+    		
+    		//alert(analysis);
+    		//energyArray.push(analysis.energy);
+    	}
+    	doubleAjax(tempCSV,access_token);
+      //$(".recommendations").show();
+      //alert(response.items.name);
+
+      $.post(
+  "home/pick_color",
+    { name: tempArray, time:tempArray,userid:globalUserId}
+);
+      //doubleAjax(response.items[0].id,access_token);
+    }
+  });
+  //alert("wow");
+}
+
+function doubleAjax(songs,access_token) {
+  $.ajax({
+    url: 'https://api.spotify.com/v1/audio-features/?ids='+songs,
+    headers: {
+      'Authorization': 'Bearer ' + access_token
+    },
+    success: function(response) {
+    	//alert(songs)
+    	//alert(response.audio_features[0].id)
+            $.post(
+  "home/pick_cumberbun",
+    { features:response,userid:globalUserId}
+	);
+   window.location.href = '/main';
+    }
+  });
+  //return(songs);
+}
+
+function loginFunction(access_token)
+{
+	  $.ajax({
+    url: 'https://api.spotify.com/v1/me'
+    headers: {
+      'Authorization': 'Bearer ' + access_token
+    },
+    success: function(response) {
+    	globalUserId=response.id;
+            $.post(
+  "home/login",
+    { userid:response.id}
+	);
+   
+    }
+  });
+}
+
+function mapOverSongs(songs) {
+    //$("#getrecommendations").show();
+    songs.map( function(song) {
+          var list = "<input type='checkbox' name='top-tracks' value='" +
+                  song.id + "'>" +
+                  "<a href='" + song.external_urls.spotify + "'>" +
+                  song.name +
+                  " by " + song.artists[0].name +
+                  " from the album " + song.album.name +
+                  "</a><br><br>";
+          document.getElementById('top-tracks').innerHTML += list;
+    });
+}
+
+function getRecommendations(access_token) {
+    var checkboxes = document.getElementsByName('top-tracks');
+    var selected = "";
+    for (var i=0, n=checkboxes.length; i<n; i++) {
+        if (checkboxes[i].checked) {
+            selected += checkboxes[i].value+",";
+        }
+    }
+    selected = selected.slice(0, -1);
+    $.ajax({
+        url: 'https://api.spotify.com/v1/recommendations?market=US&seed_tracks=' + selected + '&limit=10',
+        headers: {
+        'Authorization': 'Bearer ' + access_token
+        },
+        success: function(response) {
+            mapOverRecommendations(response.tracks);
+        }
+    });
+}
+
+function mapOverRecommendations(recommendations) {
+  $(".recommendations-table").show();
+  recommendations.map(function (song) {
+    var list =
+        "<tr><td><a target='_blank' href='" + song.external_urls.spotify + "'>" + song.name + "</a></td><td>" + song.artists[0].name + "</td><td>" + song.album.name + "</td></tr>";
+    document.getElementById('recommendations').innerHTML += list;
+  });
+}
+
+
+
+        }
+      })();
+    </script>
+  </body>
+</html>
+

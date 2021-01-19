@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Main Page EJS Test</h2>
+<p>My first paragraph.</p>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js">
+</script>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<script>
+  var globalUserId="";
+function getCookie() {
+  
+  var ca = document.cookie.split('=');
+  //alert(ca[1]);
+  globalUserId=ca[2];
+  return ca[1];
+}
+
+var holdMyBeer=getCookie();
+var LastSong="";
+
+        function getTopTracks(access_token) {
+  $.ajax({
+    url: 'https://api.spotify.com/v1/me/top/tracks?limit=10',
+    headers: {
+      'Authorization': 'Bearer ' + holdMyBeer
+    },
+    success: function(response) {
+      tempArray=[];
+      //energyArray=[];
+      for (var i=0;i<10;i++)
+      {
+        bool="true";
+        tempArray.push(response.items[i].id)
+
+        doubleAjax(response.items[i].id,response.items[i].id,access_token,i);
+        //alert(analysis);
+        //energyArray.push(analysis.energy);
+      }
+      //$(".recommendations").show();
+      //alert(response.items.name);
+
+      $.post(
+  "home/pick_color",
+    { name: tempArray, time:tempArray,userid:globalUserId}
+);
+      //doubleAjax(response.items[0].id,access_token);
+    }
+  });
+}
+
+function doubleAjax(songs,name,access_token,x) {
+  $.ajax({
+    url: 'https://api.spotify.com/v1/audio-features/'+songs,
+    headers: {
+      'Authorization': 'Bearer ' + holdMyBeer
+    },
+    success: function(response) {
+            $.post(
+  "home/pick_cumberbun",
+    { energy: response.energy, name:name,valence:response.valence,speechiness:response.speechiness,danceability:response.danceability,acousticness:response.acousticness,userid:globalUserId}
+  );
+   
+    }
+  });
+
+  //return(songs);
+}
+
+function SuperAlgorithm(a,d,song) {
+                  $.ajax({
+                      url: 'https://api.spotify.com/v1/recommendations?limit=10&market=US&seed_tracks='+song+'&min_danceability='+d+'&min_energy='+a+'&min_popularity=5',
+
+                      headers: {
+                          'Authorization': 'Bearer ' + holdMyBeer
+                      },
+                      success: function (response) {
+                        lastSong=response.tracks[0].id;
+                          //alert(response.tracks[0].id);
+                          //alert(response.tracks[0].artists[0].name);
+                          myFunction3(response.tracks[0].id);
+                          
+                      }
+                  });
+
+}
+
+function GetShit() {
+                  $.get("/home/juju", {userid:globalUserId},function(string) {
+                    //alert(string[0][0].avg);
+                    //alert(string[4][0].avg);
+                    //alert(string[5][0].name);
+    SuperAlgorithm(string[0][0].avg,string[4][0].avg,string[5][0].name);
+})
+
+}
+
+function myFunction3(songURI)
+{
+  document.getElementById("changeFrame").innerHTML='<iframe src="https://open.spotify.com/embed/track/'+songURI+'" width="300" height="380" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>';
+}
+
+GetShit();
+//window.alert(getCookie());
+//getTopTracks(holdMyBeer);
+</script>
+
+                <%- color_msg %>
+                
+        
+<input type="button" id="myCheck" value="Next Song" onclick="myFunction2()">
+<input type="button" id="myCheck" value="GetIt" onclick="GetShit()">
+<input type="button" id="myCheck" value="aloTest" onclick="SuperAlgorithm(.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5,.5)">
+
+<span id="changeFrame"></span>
+
+
+</body>
+</html> 

@@ -1,0 +1,24 @@
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+.card-body {
+	text-align: center;
+	font-size: 20px;
+	font-weight: bold;
+	background-color: pink;
+}
+.container {
+	padding-top: 100px;
+}
+.x {
+	font-weight: bold;
+}
+.jpt {
+	font-weight: normal;
+}
+.jpt1 {
+	font-weight: normal;
+}
