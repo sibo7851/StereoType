@@ -15,11 +15,11 @@ var cors = require('cors');
 var querystring = require('querystring');
 var cookieParser = require('cookie-parser');
 
-var client_id = '1d41f215c1284efaa66c487b66f188ee'; // Your client id
-var client_secret = '1580594d195e4de89b3160c9cd71e97b'; // Your secret
+var client_id = 'XXXXXXXX'; // Your client id
+var client_secret = 'XXXXXXXXXX'; // Your secret
 //var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
 //https://stereotype3.herokuapp.com/
-var redirect_uri = 'https://stereotype3.herokuapp.com/callback';
+var redirect_uri = 'XXXXXXXXXXX';
 var bodyParser = require('body-parser'); //Ensure our body-parser tool has been added
 
 var pgp = require('pg-promise')();
